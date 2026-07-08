@@ -1,1 +1,117 @@
+go atlas
+#######VARIABLES########################################################
+set Lg=0.200      # Channel Length 
+set R=0.025       # Radius
+set tOX=0.045   # Oxide Thickness
+set doping_p=1e19   # Source Doping
+set doping_n=1e19  # Drain Doping
+set doping_channel=1e17  # Channel Doping
+set gate_wf=4    # Gate Metal Work Function
+set insul_perm=25 # Insulator Permittivity 
+set Lds=0.080    # Drain and Source Length
+######MESH###############################################################
+MESH CYLINDRICAL
+X.MESH loc=0.0  	        spacing=0.01
+X.MESH loc=$R-0.005	        spacing=0.001
+X.MESH loc=$R		        spacing=0.0005
+X.MESH loc=$R+0.005	        spacing=0.01
+X.MESH loc=$R+$tOX+0.0015	spacing=0.01
+Y.MESH loc=0			        spacing=0.02
+Y.MESH loc=0.01			    spacing=0.02
+Y.MESH loc=$Lds-0.005		spacing=0.001
+Y.MESH loc=$Lds			    spacing=0.0001
+Y.MESH loc=($Lg+$Lds)/2		spacing=0.02
+Y.MESH loc=$Lg+$Lds		    spacing=0.01
+Y.MESH loc=$Lg+$Lds+0.005	spacing=0.01
+Y.MESH loc=$Lg+$Lds+$Lds-0.01 spacing=0.02
+Y.MESH loc=$Lg+$Lds+$Lds 	spacing=0.02
 
+#######REGIONS###########################################################
+REGION NUM=1 NAME=Source MATERIAL=silicon \
+Y.MIN=0.01 Y.MAX=$Lds X.MIN=0 X.MAX=$R
+
+REGION NUM=3 NAME=Channel MATERIAL=silicon \
+Y.MIN=$Lds Y.MAX=$Lg+$Lds X.MAX=$R
+
+REGION NUM=4 NAME=Drain MATERIAL=silicon \
+Y.MIN=$Lg+$Lds Y.MAX=$Lg+$Lds+$Lds-0.01 X.MAX=$R
+
+REGION NUM=5 MATERIAL=sio2 \
+Y.MIN=$Lds Y.MAX=$Lg+$Lds X.MIN=$R 
+
+REGION NUM=6 MATERIAL=air \
+Y.MIN=0 Y.MAX=$Lds X.MIN=$R 
+
+REGION NUM=7 MATERIAL=air \
+Y.MIN=$Lg+$Lds Y.MAX=$Lg+$Lds+$Lds X.MIN=$R 
+#######ELECTRODES#######################################################
+ELECTRODE NAME=SOURCE MATERIAL=Aluminum \
+Y.MIN=0 Y.MAX=0.01 X.MIN=0 X.MAX=$R
+
+ELECTRODE NAME=DRAIN MATERIAL=Aluminum \
+Y.MIN=$Lg+$Lds+$Lds-0.01 Y.MAX=$Lg+$Lds+$Lds X.MIN=0 X.MAX=$R
+
+ELECTRODE NAME=GATE MATERIAL=Aluminum \
+Y.MIN=$Lds Y.MAX=$Lg+$Lds X.MIN=$R+$tOX X.MAX=$R+$tOX+0.0015
+
+#######DOPING############################################################
+DOPING  GAUSSIAN material=Si p.type concentration=$doping_channel  \
+	Y.min=$Lds Y.max=$Lds+$Lg X.max=$R \
+	Y.char=0.01 X.char=0
+
+DOPING  GAUSSIAN material=Si p.type concentration=$doping_p \
+	Y.min=0.01 Y.max=$Lds X.max=$R \
+	Y.char=0.025 X.char=0
+
+DOPING  GAUSSIAN material=Si n.type concentration=$doping_n \
+	Y.min=$Lds+$Lg Y.max=$Lg+$Lds+$Lds-0.01 X.max=$R \
+	Y.char=0.025 X.char=0
+
+#######QUANTUM MESH###################################################
+qtx.mesh 	loc=0	 	    spac=0.0050  
+qtx.mesh 	loc=$R-0.005 	spac=0.0005 
+qtx.mesh 	loc=$R	 	    spac=0.0001 
+
+qty.mesh 	loc=$Lds-0.050+0.01 spac=0.00025 
+qty.mesh	loc=$Lds+0.01	    spac=0.00010  
+qty.mesh 	loc=$Lds+0.050+0.01 spac=0.00025 
+
+#######MODELS###########################################################
+material material=Si me.tunnel=0.22 mh.tunnel=0.12
+material material=SiO2 permittivity=$insul_perm
+contact name=GATE workfunc=$gate_wf
+
+models qtunn.dir=ydir bbt.nonlocal temperature=300 \
+fermi ni.fermi srh auger cvt \
+fldmob conmob bgn print
+
+method itlimit=5
+
+output band.temp band.param traps u.srh j.electron j.hole j.total qfn qfp
+
+#######CALCULATIONS####################################################
+Loop steps=2
+
+assign name=Vn n.value=(1.2, 0.05)
+
+solve init
+
+solve name=DRAIN vDRAIN=0 vstep=0.025 vfinal=$Vn
+save outf=mod_quantum_Vg0_Vd$'Vn'.str
+
+log outf=mod_quantum_idvg_Vd$'Vn'.log
+solve name=GATE vGATE=-0.0 vstep=-0.05 vfinal=-0.5
+solve name=GATE vGATE=-0.5 vstep=0.05 vfinal=1.5
+
+save outf=mod_quantum_Vg1.5_Vd1.2.str
+
+log off
+
+L.END
+
+#######TONYPLOT#########################################################
+tonyplot mod_quantum_Vg1.5_Vd1.2.str
+tonyplot -overlay mod_quantum_idvg_Vd0.05.log mod_quantum_idvg_Vd1.2.log \
+-set quantumex24.set
+
+Quit
