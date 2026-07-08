@@ -1,1 +1,121 @@
+go atlas
+Device and Simulation Parameters
+set Lg=0.3
+set R=0.025
+set tOX=0.006
+set doping_p=5e18
+set doping_n=5e19
+set doping_channel=5e16
+set gate_wf=4
+set insul_perm=25
+set Lds=0.08
 
+##############MESH DEFINITION#######################
+mesh cylindrical
+x.mesh loc=0.0 spacing=0.01
+x.mesh loc=$R-0.005 spacing=0.001
+x.mesh loc=$R spacing=0.0005
+x.mesh loc=$R+0.005 spacing=0.01
+x.mesh loc=$R+$tOX+0.0015 spacing=0.01
+y.mesh loc=0 spacing=0.02
+y.mesh loc=0.01 spacing=0.02
+y.mesh loc=$Lds-0.005 spacing=0.001
+y.mesh loc=$Lds spacing=0.0001
+y.mesh loc=($Lg+$Lds)/2 spacing=0.02
+y.mesh loc=$Lg+$Lds spacing=0.01
+y.mesh loc=$Lg+$Lds+0.005 spacing=0.01
+y.mesh loc=$Lg+$Lds+$Lds-0.01 spacing=0.02
+y.mesh loc=$Lg+$Lds+$Lds spacing=0.02
+
+############REGIONS####################################
+region num=1 material=Silicon y.min=0.01 y.max=$Lds x.max=$R
+region num=2 material=Silicon y.min=$Lds y.max=$Lg+$Lds x.max=$R
+region num=3 material=Silicon y.min=$Lg+$Lds y.max=$Lg+$Lds+$Lds-0.01 x.max=$R
+region num=4 material=SiO2 y.min=$Lds y.max=$Lg+$Lds x.min=$R
+region num=5 material=Air y.min=0 y.max=$Lds x.min=$R
+region num=6 material=Air y.min=$Lg+$Lds y.max=$Lg+$Lds+$Lds x.min=$R
+
+#########ELECTRODES###################################
+electrode name=SOURCE x.min=0 x.max=$R y.min=0 y.max=0.01
+electrode name=DRAIN x.min=0 x.max=$R y.min=$Lg+$Lds+$Lds-0.01 y.max=$Lg+$Lds+$Lds
+electrode name=GATEA x.min=$R+$tOX x.max=$R+$tOX+0.0007 y.min=$Lds y.max=$Lg+$Lds
+electrode name=GATEB x.min=$R+$tOX+0.0008 x.max=$R+$tOX+0.0015 y.min=$Lds y.max=$Lg+$Lds
+
+##########DOPING########################################
+doping gaussian p.type concentration=$doping_channel x.max=$R y.min=$Lds y.max=$Lg+$Lds y.char=0.01
+doping gaussian p.type concentration=$doping_p x.max=$R y.min=0.01 y.max=$Lds y.char=0.025
+doping gaussian n.type concentration=$doping_n x.max=$R y.min=$Lg+$Lds y.max=$Lg+$Lds+$Lds-0.01 y.char=0.025
+Quantum mesh in X-direction (radius direction)
+qtx.mesh loc=0.000 spac=0.002
+qtx.mesh loc=0.020 spac=0.0005
+qtx.mesh loc=0.025 spac=0.0002
+Quantum mesh in Y-direction (source-channel junction)
+qty.mesh loc=0.070 spac=0.001
+qty.mesh loc=0.090 spac=0.0002
+qty.mesh loc=0.120 spac=0.0005
+Material and Models
+material material=Si me.tunnel=0.22 mh.tunnel=0.12
+material material=SiO2 permittivity=$insul_perm
+contact name=GATEA workfunc=$gate_wf
+contact name=GATEB workfunc=$gate_wf
+models bbt.nonlocal srh fermi ni.fermi auger cvt fldmob conmob bgn
+method newton
+output con.band val.band j.elec j.hole
+
+
+========================
+CASE 00: GATEA=0, GATEB=0
+========================
+solve init
+solve name=GATEA vgate=0.0
+solve name=GATEB vgate=0.0
+log outf=AND_00.log
+solve name=GATEA vstep=0.05 vfinal=1.2
+solve name=GATEB vstep=0.05 vfinal=1.2
+save outf=AND_00.str
+log off
+
+========================
+CASE 01: GATEA=0, GATEB=1
+========================
+solve init
+solve name=GATEA vgate=0.0
+solve name=GATEB vgate=1.0
+log outf=AND_01.log
+solve name=GATEA vstep=0.05 vfinal=1.2
+solve name=GATEB vstep=0.05 vfinal=1.2
+save outf=AND_01.str
+log off
+
+
+========================
+CASE 10: GATEA=1, GATEB=0
+========================
+solve init
+solve name=GATEA vgate=1.0
+solve name=GATEB vgate=0.0
+log outf=AND_10.log
+solve name=GATEA vstep=0.05 vfinal=1.2
+solve name=GATEB vstep=0.05 vfinal=1.2
+save outf=AND_10.str
+log off
+
+
+========================
+CASE 11: GATEA=1, GATEB=1
+========================
+solve init
+solve name=GATEA vgate=1.0
+solve name=GATEB vgate=1.0
+solve name=DRAIN vstep=0.05 vfinal=1.0
+log outf=AND_11.log
+solve name=GATEA vstep=0.05 vfinal=1.2
+solve name=GATEB vstep=0.05 vfinal=1.2
+save outf=AND_11.str
+log off
+
+========================
+TonyPlot (Optional)
+========================
+tonyplot -overlay AND_00.log AND_01.log AND_10.log AND_11.log
+quit
