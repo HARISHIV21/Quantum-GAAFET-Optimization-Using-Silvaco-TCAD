@@ -1,11 +1,11 @@
 go atlas
 #######VARIABLES########################################################
-set Lg=0.300      # Channel Length 
+set Lg=0.200      # Channel Length 
 set R=0.025       # Radius
-set tOX=0.006   # Oxide Thickness
-set doping_p=5e18   # Source Doping
-set doping_n=5e19  # Drain Doping
-set doping_channel=5e16  # Channel Doping
+set tOX=0.045   # Oxide Thickness
+set doping_p=1e19   # Source Doping
+set doping_n=1e19  # Drain Doping
+set doping_channel=1e17  # Channel Doping
 set gate_wf=4    # Gate Metal Work Function
 set insul_perm=25 # Insulator Permittivity 
 set Lds=0.080    # Drain and Source Length
