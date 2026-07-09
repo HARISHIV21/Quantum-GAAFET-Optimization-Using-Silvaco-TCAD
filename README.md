@@ -41,41 +41,6 @@ This project investigates how geometry scaling and doping optimization can impro
 
 ---
 
-# Repository Structure
-
-```text
-Quantum-GAAFET-Optimization-Using-Silvaco-TCAD
-
-├── README.md
-├── LICENSE
-├── references.md
-│
-├── src/
-│   ├── 01_baseline_gaafet.in
-│   ├── 02_optimized_gaafet.in
-│   └── 03_gaafet_and_gate.in
-│
-├── analysis/
-│   ├── parameter_comparison.md
-│   ├── performance_metrics.md
-│   └── mathematical_model.md
-│
-├── results/
-│   ├── baseline_IDVG.png
-│   ├── optimized_IDVG.png
-│   ├── device_comparison.png
-│   ├── leakage_analysis.png
-│   ├── logic_00.png
-│   ├── logic_01.png
-│   ├── logic_10.png
-│   └── logic_11.png
-│
-└── docs/
-    └── project_report.pdf
-```
-
----
-
 # Device Optimization
 
 The optimized GAAFET was obtained by modifying critical device parameters from the baseline structure.
