@@ -211,23 +211,5 @@ Potential extensions of this work include:
 
 The publications and technical references used during this work are listed in `references.md`.
 
----
-
-# About
-
-**Dhanusri V**
-
-Master's Student – Embedded Systems
-
-Areas of Interest:
-
-- Semiconductor Device Engineering
-- Nanoelectronics
-- TCAD Simulation
-- VLSI Design
-- Embedded Systems
-- Low-Power Digital Circuits
-
----
 
 > **Disclaimer:** This repository is intended for educational and research purposes. The optimized GAAFET presented here is based on TCAD simulations and is not intended to represent a fabricated commercial device.
